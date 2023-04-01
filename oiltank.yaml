@@ -36,8 +36,10 @@ sensor:
   - platform: ultrasonic
     trigger_pin: 10
     echo_pin: 37
-    name: "Distance"
+    name: "Level"
+    # convert range from metres to level (2m = empty, 0m = full)
     filters:
-      - lambda: return (2000.0 - x) / 20.0;
+      - lambda: return (2.0 - x) / 2.0 * 100;
     unit_of_measurement: "%"
-    accuracy_decimals: 0
+    accuracy_decimals: 1
+    update_interval: 20s
