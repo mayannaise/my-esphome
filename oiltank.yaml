@@ -1,0 +1,43 @@
+esphome:
+  name: oiltank
+
+esp32:
+  board: m5stick-c
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  password: ""
+
+ota:
+  password: ""
+
+mqtt:
+  broker: !secret mqtt_broker_host
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: !secret fallback_ap_ssid
+    password: !secret fallback_ap_password
+
+captive_portal:
+
+sensor:
+  - platform: dht
+    pin: 9
+    temperature:
+        name: "Temperature"
+    humidity:
+        name: "Humidity"
+  - platform: ultrasonic
+    trigger_pin: 10
+    echo_pin: 37
+    name: "Distance"
+    filters:
+      - lambda: return (2000.0 - x) / 20.0;
+    unit_of_measurement: "%"
+    accuracy_decimals: 0

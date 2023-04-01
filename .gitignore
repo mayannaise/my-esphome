@@ -1,0 +1,3 @@
+# gitignore settings for ESPHome
+/.esphome/
+/secrets.yaml
