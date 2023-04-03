@@ -26,6 +26,14 @@ wifi:
 
 captive_portal:
 
+time:
+  platform: homeassistant
+
+sun:
+  latitude: !secret home_lat
+  longitude: !secret home_lon
+  id: the_sun
+
 sensor:
   - platform: dht
     pin: 9
@@ -43,3 +51,16 @@ sensor:
     unit_of_measurement: "%"
     accuracy_decimals: 1
     update_interval: 20s
+
+binary_sensor:
+  - platform: template
+    device_class: light
+    name: "Daytime Indicator"
+    publish_initial_state: true
+    lambda: |-
+      if (*id(the_sun).sunrise(5) > *id(the_sun).sunset(-5)) {
+        return true;
+      } else {
+        return false;
+      }
+
