@@ -1,0 +1,29 @@
+esphome:
+  name: dashboard
+
+esp32:
+  board: m5stick-c
+  framework:
+    type: arduino
+
+<<: !include common.yaml
+
+time:
+  platform: homeassistant
+
+sun:
+  latitude: !secret home_lat
+  longitude: !secret home_lon
+  id: the_sun
+
+binary_sensor:
+  - platform: template
+    device_class: light
+    name: "Daytime Indicator"
+    publish_initial_state: true
+    lambda: |-
+      if (*id(the_sun).sunrise(5) > *id(the_sun).sunset(-5)) {
+        return true;
+      } else {
+        return false;
+      }
