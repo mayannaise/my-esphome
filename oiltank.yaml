@@ -9,15 +9,19 @@ esp32:
 <<: !include common.yaml
 
 sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal Strength"
+    update_interval: 10s
+    entity_category: "diagnostic"
   - platform: dht
-    pin: 9
+    pin: GPIO12
     temperature:
         name: "Temperature"
     humidity:
         name: "Humidity"
   - platform: ultrasonic
-    trigger_pin: 10
-    echo_pin: 37
+    trigger_pin: GPIO10
+    echo_pin: GPIO14
     name: "Fuel Level"
     timeout: 4m
     filters:
