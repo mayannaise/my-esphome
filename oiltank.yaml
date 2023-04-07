@@ -14,14 +14,16 @@ esp32:
 # - width = 61cm
 # - volume = 1358 litres
 
+# update readings every 2 minutes
+
 sensor:
   - platform: wifi_signal
     name: "WiFi Signal Strength"
-    update_interval: 10s
+    update_interval: 120s
     entity_category: "diagnostic"
   - platform: dht
     pin: GPIO26
-    update_interval: 10s
+    update_interval: 120s
     temperature:
         name: "Temperature"
     humidity:
@@ -36,4 +38,4 @@ sensor:
       - lambda: return round((1.15 - x) / 1.15 * 100);
     unit_of_measurement: "%"
     accuracy_decimals: 0
-    update_interval: 20s
+    update_interval: 120s
