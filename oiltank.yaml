@@ -26,8 +26,8 @@ sensor:
     name: "Fuel Level"
     timeout: 4m
     filters:
-      # convert range from metres to percent level (2m = empty, 0m = full)
-      - lambda: return round((2.0 - x) / 2.0 * 100);
+      # convert range from metres to percent level (1.15m = empty, 0m = full)
+      - lambda: return round((1.15 - x) / 1.15 * 100);
     unit_of_measurement: "%"
     accuracy_decimals: 0
     update_interval: 20s
