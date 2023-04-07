@@ -14,7 +14,8 @@ sensor:
     update_interval: 10s
     entity_category: "diagnostic"
   - platform: dht
-    pin: GPIO12
+    pin: GPIO26
+    update_interval: 10s
     temperature:
         name: "Temperature"
     humidity:
