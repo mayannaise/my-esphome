@@ -8,6 +8,12 @@ esp32:
 
 <<: !include common.yaml
 
+# oil tanks dimensions
+# - height = 122cm
+# - length = 182.5cm
+# - width = 61cm
+# - volume = 1358 litres
+
 sensor:
   - platform: wifi_signal
     name: "WiFi Signal Strength"
