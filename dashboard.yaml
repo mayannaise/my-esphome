@@ -16,7 +16,8 @@ globals:
     type: int
 
 time:
-  platform: homeassistant
+  platform: sntp
+  id: esptime
 
 sun:
   latitude: !secret home_lat
@@ -113,8 +114,11 @@ display:
 
       // signal strength
       sprintf(text, "%ddBm", id(latest_wifi_signal_strength));
-      it.print(5, it.get_height() - 5, id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
+      it.print(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
 
       // litres remaining
       sprintf(text, "%.0f litres", 13.58 * id(latest_fuel_level));
-      it.print(it.get_width() - 5, it.get_height() - 5, id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
+      it.print(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
+
+      // current time
+      it.strftime(dial_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
