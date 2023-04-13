@@ -1,12 +1,13 @@
 esphome:
   name: dashboard
-
-esp32:
-  board: m5stick-c
-  framework:
-    type: arduino
+  platform: ESP32
+  board: m5stack-core-esp32
 
 <<: !include common.yaml
+
+external_components:
+  - source: github://pionizer/pionizer-axp192
+    components: [axp192]
 
 time:
   platform: homeassistant
@@ -16,14 +17,73 @@ sun:
   longitude: !secret home_lon
   id: the_sun
 
-binary_sensor:
-  - platform: template
-    device_class: light
-    name: "Daytime Indicator"
-    publish_initial_state: true
+sensor:
+  - platform: axp192
+    model: M5CORE2
+    address: 0x34
+    i2c_id: bus_a
+    update_interval: 30s
+    brightness: 100%
+    battery_level:
+      name: Battery Level
+  - platform: wifi_signal
+    name: WiFi Signal Strength
+  - platform: uptime
+    name: Uptime
+
+mqtt:
+  broker: !secret mqtt_broker_host
+  on_message:
+    - topic: oiltank/sensor/fuel_level/state
+      then:
+        lambda: ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
+
+spi:
+  clk_pin: 18
+  mosi_pin: 23
+  miso_pin: 38
+
+i2c:
+   - id: bus_a
+     sda: GPIO21
+     scl: GPIO22
+     scan: True
+
+font:
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 900
+    id: roboto
+    size: 30
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 900
+    id: roboto_large
+    size: 60
+
+display:
+  - platform: ili9xxx
+    model: M5Stack
+    cs_pin: 5
+    dc_pin: 15
+    rotation: 0
     lambda: |-
-      if (*id(the_sun).sunrise(5) > *id(the_sun).sunset(-5)) {
-        return true;
-      } else {
-        return false;
-      }
+      const auto red = Color(255, 0, 0);
+      const auto green = Color(0, 190, 0);
+      const auto blue = Color(10, 0, 200);
+      const auto amber = Color(255, 191, 10);
+      const auto white = Color(255, 255, 255);
+      const auto black = Color(0, 0, 0);
+
+      it.fill(black);
+
+      it.rectangle(20, 20, it.get_width() - 40, 50, red);
+      it.print(it.get_width() / 2, 45, id(roboto), green, TextAlign::CENTER, "Oil Tank");
+
+      const auto dial_x {it.get_width() / 2};
+      const auto dial_y {((it.get_height() - 110) / 2) + 90};
+      const auto radius {((it.get_height() - 110) / 2)};
+      it.filled_circle(dial_x, dial_y, radius, blue);
+      it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, "99%");

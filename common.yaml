@@ -7,9 +7,6 @@ api:
 ota:
   password: ""
 
-mqtt:
-  broker: !secret mqtt_broker_host
-
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password

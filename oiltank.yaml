@@ -8,6 +8,9 @@ esp32:
 
 <<: !include common.yaml
 
+mqtt:
+  broker: !secret mqtt_broker_host
+
 # oil tanks dimensions
 # - height = 122cm
 # - length = 182.5cm
