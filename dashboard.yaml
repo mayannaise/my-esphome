@@ -9,6 +9,12 @@ external_components:
   - source: github://pionizer/pionizer-axp192
     components: [axp192]
 
+globals:
+  - id: latest_fuel_level
+    type: int
+  - id: latest_wifi_signal_strength
+    type: int
+
 time:
   platform: homeassistant
 
@@ -36,7 +42,14 @@ mqtt:
   on_message:
     - topic: oiltank/sensor/fuel_level/state
       then:
-        lambda: ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
+        lambda: |-
+          ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
+          id(latest_fuel_level) = stoi(x);
+    - topic: oiltank/sensor/wifi_signal_strength/state
+      then:
+        lambda: |-
+          ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %sdBm", x.c_str());
+          id(latest_wifi_signal_strength) = stoi(x);
 
 spi:
   clk_pin: 18
@@ -62,6 +75,12 @@ font:
       weight: 900
     id: roboto_large
     size: 60
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 500
+    id: roboto_small
+    size: 16
 
 display:
   - platform: ili9xxx
@@ -74,16 +93,28 @@ display:
       const auto green = Color(0, 190, 0);
       const auto blue = Color(10, 0, 200);
       const auto amber = Color(255, 191, 10);
-      const auto white = Color(255, 255, 255);
+      const auto white = Color(240, 240, 240);
       const auto black = Color(0, 0, 0);
 
       it.fill(black);
 
+      // title
       it.rectangle(20, 20, it.get_width() - 40, 50, red);
       it.print(it.get_width() / 2, 45, id(roboto), green, TextAlign::CENTER, "Oil Tank");
 
+      // fuel level
       const auto dial_x {it.get_width() / 2};
       const auto dial_y {((it.get_height() - 110) / 2) + 90};
       const auto radius {((it.get_height() - 110) / 2)};
       it.filled_circle(dial_x, dial_y, radius, blue);
-      it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, "99%");
+      char text[20];
+      sprintf(text, "%d%%", id(latest_fuel_level));
+      it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, text);
+
+      // signal strength
+      sprintf(text, "%ddBm", id(latest_wifi_signal_strength));
+      it.print(5, it.get_height() - 5, id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
+
+      // litres remaining
+      sprintf(text, "%.0f litres", 13.58 * id(latest_fuel_level));
+      it.print(it.get_width() - 5, it.get_height() - 5, id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
