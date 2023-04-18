@@ -124,7 +124,7 @@ display:
       it.print(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
 
       // litres remaining
-      sprintf(text, "%.0f litres", id(latest_fuel_volume));
+      sprintf(text, "%d litres", id(latest_fuel_volume));
       it.print(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
 
       // current time
