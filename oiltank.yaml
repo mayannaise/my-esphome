@@ -17,8 +17,6 @@ mqtt:
 # - width = 61cm
 # - volume = 1358 litres
 
-# update readings every 2 minutes
-
 sensor:
   - platform: wifi_signal
     name: "WiFi Signal Strength"
@@ -32,13 +30,22 @@ sensor:
     humidity:
         name: "Humidity"
   - platform: ultrasonic
+    id: level_sensor
+    internal: true
     trigger_pin: GPIO10
     echo_pin: GPIO14
-    name: "Fuel Level"
     timeout: 4m
-    filters:
-      # convert range from metres to percent level (1.15m = empty, 0m = full)
-      - lambda: return round((1.15 - x) / 1.15 * 100);
+    update_interval: 120s
+  - platform: template
+    name: Fuel Level
+    # convert from metres to percent level (1.15m = empty, 0m = full)
+    lambda: return round((1.15 - id(level_sensor).state) / 1.15 * 100);
     unit_of_measurement: "%"
     accuracy_decimals: 0
     update_interval: 120s
+  - platform: template
+    name: Fuel Volume
+    unit_of_measurement: "litres"
+    accuracy_decimals: 0
+    update_interval: 120s
+    lambda: return (1.15 - id(level_sensor).state) * 1113.25;
