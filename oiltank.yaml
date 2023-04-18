@@ -35,11 +35,11 @@ sensor:
     trigger_pin: GPIO10
     echo_pin: GPIO14
     timeout: 4m
-    update_interval: 120s
+    update_interval: 15s
     filters:
       - sliding_window_moving_average:
           window_size: 8
-          send_every: 1
+          send_every: 8
   - platform: template
     name: Fuel Level
     # convert from metres to percent level (1.15m = empty, 0m = full)
