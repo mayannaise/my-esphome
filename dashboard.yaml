@@ -12,6 +12,8 @@ external_components:
 globals:
   - id: latest_fuel_level
     type: int
+  - id: latest_fuel_volume
+    type: int
   - id: latest_wifi_signal_strength
     type: int
 
@@ -46,6 +48,11 @@ mqtt:
         lambda: |-
           ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
           id(latest_fuel_level) = stoi(x);
+    - topic: oiltank/sensor/fuel_volume/state
+      then:
+        lambda: |-
+          ESP_LOGI("dashboard", "Fuel volume is %s litres", x.c_str());
+          id(latest_fuel_volume) = stoi(x);
     - topic: oiltank/sensor/wifi_signal_strength/state
       then:
         lambda: |-
@@ -117,7 +124,7 @@ display:
       it.print(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
 
       // litres remaining
-      sprintf(text, "%.0f litres", 13.58 * id(latest_fuel_level));
+      sprintf(text, "%.0f litres", id(latest_fuel_volume));
       it.print(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
 
       // current time
