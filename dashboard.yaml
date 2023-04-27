@@ -5,6 +5,12 @@ esphome:
 
 <<: !include common.yaml
 
+wifi:
+  ssid: !secret wifi_ssid_dashboard
+  password: !secret wifi_password
+  ap:
+    password: !secret fallback_ap_password
+
 external_components:
   - source: github://pionizer/pionizer-axp192
     components: [axp192]

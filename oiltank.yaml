@@ -8,6 +8,12 @@ esp32:
 
 <<: !include common.yaml
 
+wifi:
+  ssid: !secret wifi_ssid_oiltank
+  password: !secret wifi_password
+  ap:
+    password: !secret fallback_ap_password
+
 mqtt:
   broker: !secret mqtt_broker_host
 
@@ -37,9 +43,9 @@ sensor:
     timeout: 4m
     update_interval: 15s
     filters:
-      - sliding_window_moving_average:
+      - min:
           window_size: 8
-          send_every: 8
+          send_every: 4
   - platform: template
     name: Fuel Level
     # convert from metres to percent level (1.15m = empty, 0m = full)
