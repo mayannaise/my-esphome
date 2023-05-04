@@ -22,6 +22,9 @@ globals:
     type: int
   - id: latest_wifi_signal_strength
     type: int
+  - id: last_update
+    type: ESPTime
+    initial_value: "id(esptime).now()"
 
 time:
   platform: sntp
@@ -52,18 +55,42 @@ mqtt:
     - topic: oiltank/sensor/fuel_level/state
       then:
         lambda: |-
-          ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
-          id(latest_fuel_level) = stoi(x);
+          if (isnan(stoi(x)))
+          {
+            ESP_LOGW("dashboard", "Ignoring NaN for fuel level");
+          }
+          else
+          {
+            ESP_LOGI("dashboard", "Fuel level is %s%%", x.c_str());
+            id(latest_fuel_level) = stoi(x);
+            id(last_update) = id(esptime).now();
+          }
     - topic: oiltank/sensor/fuel_volume/state
       then:
         lambda: |-
-          ESP_LOGI("dashboard", "Fuel volume is %s litres", x.c_str());
-          id(latest_fuel_volume) = stoi(x);
+          if (isnan(stoi(x)))
+          {
+            ESP_LOGW("dashboard", "Ignoring NaN for fuel volume");
+          }
+          else
+          {
+            ESP_LOGI("dashboard", "Fuel volume is %s litres", x.c_str());
+            id(latest_fuel_volume) = stoi(x);
+            id(last_update) = id(esptime).now();
+          }
     - topic: oiltank/sensor/wifi_signal_strength/state
       then:
         lambda: |-
-          ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %sdBm", x.c_str());
-          id(latest_wifi_signal_strength) = stoi(x);
+          if (isnan(stoi(x)))
+          {
+            ESP_LOGW("dashboard", "Ignoring NaN for WiFi signal strength");
+          }
+          else
+          {
+            ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %sdBm", x.c_str());
+            id(latest_wifi_signal_strength) = stoi(x);
+            id(last_update) = id(esptime).now();
+          }
 
 spi:
   clk_pin: 18
@@ -110,8 +137,17 @@ display:
       const auto white = Color(240, 240, 240);
       const auto black = Color(0, 0, 0);
 
-      it.fill(black);
-
+      // if not received new data in 5mins, display red screen
+      const double time_since_last_update_secs = difftime(id(last_update).timestamp, id(esptime).now().timestamp); 
+      if (time_since_last_update_secs > 300)
+      {
+        it.fill(red);
+      }
+      else
+      {
+        it.fill(black);
+      }
+      
       // title
       it.rectangle(20, 20, it.get_width() - 40, 50, red);
       it.print(it.get_width() / 2, 45, id(roboto), green, TextAlign::CENTER, "Oil Tank");
