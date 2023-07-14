@@ -18,6 +18,7 @@ external_components:
 globals:
   - id: latest_fuel_level
     type: int
+    initial_value: "-1"
   - id: latest_fuel_volume
     type: int
   - id: latest_wifi_signal_strength
@@ -61,7 +62,7 @@ mqtt:
             id(latest_fuel_level) = val;
             id(last_update) = id(esptime).now();
           } else {
-            ESP_LOGW("dashboard", "Error processing fuel level");
+            ESP_LOGW("dashboard", "Error processing fuel level: %s", x.c_str());
           }
     - topic: oiltank/sensor/fuel_volume/state
       then:
@@ -72,7 +73,7 @@ mqtt:
             id(latest_fuel_volume) = val;
             id(last_update) = id(esptime).now();
           } else {
-            ESP_LOGW("dashboard", "Error processing fuel volume");
+            ESP_LOGW("dashboard", "Error processing fuel volume: %s", x.c_str());
           }
     - topic: oiltank/sensor/wifi_signal_strength/state
       then:
@@ -83,7 +84,7 @@ mqtt:
             id(latest_wifi_signal_strength) = val;
             id(last_update) = id(esptime).now();
           } else {
-            ESP_LOGW("dashboard", "Error processing signal strength");
+            ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
 
 spi:
@@ -132,8 +133,9 @@ display:
       const auto black = Color(0, 0, 0);
 
       // if not received new data in 5mins, display red screen
-      const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update).timestamp); 
-      if (time_since_last_update_secs > 300)
+      const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update).timestamp);
+      const auto data_timeout = time_since_last_update_secs > 300;
+      if (data_timeout || (id(latest_fuel_level) < 0))
       {
         it.fill(red);
       }
@@ -152,15 +154,20 @@ display:
       const auto radius {((it.get_height() - 110) / 2)};
       it.filled_circle(dial_x, dial_y, radius, blue);
       char text[20];
-      sprintf(text, "%d%%", id(latest_fuel_level));
-      it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, text);
+      snprintf(text, 20, "%d%%", id(latest_fuel_level));
+      if (id(latest_fuel_level) < 0) {
+        // no data received yet
+        it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, "---");
+      } else {
+        it.print(dial_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, text);
+      }
 
       // signal strength
-      sprintf(text, "%ddBm", id(latest_wifi_signal_strength));
+      snprintf(text, 20, "%ddBm", id(latest_wifi_signal_strength));
       it.print(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
 
       // litres remaining
-      sprintf(text, "%d litres", id(latest_fuel_volume));
+      snprintf(text, 20, "%d litres", id(latest_fuel_volume));
       it.print(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
 
       // current time
