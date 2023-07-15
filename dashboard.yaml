@@ -19,7 +19,7 @@ globals:
   - id: latest_fuel_level
     type: int
     initial_value: "-1"
-    restore_value: no
+    restore_value: yes
   - id: latest_fuel_volume
     type: int
     restore_value: no
@@ -30,6 +30,10 @@ globals:
     type: ESPTime
     initial_value: "id(esptime).now()"
     restore_value: no
+  - id: signal_lost
+    type: bool
+    initial_value: "true"
+    restore_value: yes
 
 time:
   platform: sntp
@@ -65,6 +69,7 @@ mqtt:
             ESP_LOGI("dashboard", "Fuel level is %d%%", val);
             id(latest_fuel_level) = val;
             id(last_update) = id(esptime).now();
+            id(signal_lost) = false;
           } else {
             ESP_LOGW("dashboard", "Error processing fuel level: %s", x.c_str());
           }
@@ -76,6 +81,7 @@ mqtt:
             ESP_LOGI("dashboard", "Fuel volume is %d litres", val);
             id(latest_fuel_volume) = val;
             id(last_update) = id(esptime).now();
+            id(signal_lost) = false;
           } else {
             ESP_LOGW("dashboard", "Error processing fuel volume: %s", x.c_str());
           }
@@ -87,6 +93,7 @@ mqtt:
             ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %ddBm", val);
             id(latest_wifi_signal_strength) = val;
             id(last_update) = id(esptime).now();
+            id(signal_lost) = false;
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
@@ -129,6 +136,7 @@ display:
     dc_pin: 15
     rotation: 0
     lambda: |-
+      // colour constants
       const auto red = Color(255, 0, 0);
       const auto green = Color(0, 190, 0);
       const auto blue = Color(10, 0, 200);
@@ -139,8 +147,9 @@ display:
       // if not received new data in 5mins, display red screen
       const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update).timestamp);
       const auto data_timeout = time_since_last_update_secs > 300;
-      if (data_timeout || (id(latest_fuel_level) < 0))
+      if (data_timeout || (id(latest_fuel_level) < 0) || id(signal_lost))
       {
+        id(signal_lost) = true;
         it.fill(red);
       }
       else
