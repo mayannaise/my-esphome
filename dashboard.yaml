@@ -157,36 +157,31 @@ display:
       it.rectangle(20, 20, it.get_width() - 40, 50, red);
       it.print(it.get_width() / 2, 45, id(roboto), green, TextAlign::CENTER, "Oil Tank");
 
-      // fuel level
+      // fuel level indicator
       const auto dial_y {((it.get_height() - 110) / 2) + 86};
       const auto radius {((it.get_height() - 110) / 2)};
       it.filled_circle(centre_x, dial_y, radius, blue);
-      char text[20];
-      snprintf(text, 20, "%d%%", id(latest_fuel_level));
       if (id(latest_fuel_level) < 0) {
         // no data received yet
         it.print(centre_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, "---");
       } else {
-        it.print(centre_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, text);
+        it.printf(centre_x, dial_y, id(roboto_large), amber, TextAlign::CENTER, "%d%%", id(latest_fuel_level));
       }
 
-      // footer
+      // footer separator
       it.line(0, it.get_height() - 20, it.get_width(), it.get_height() - 20, white);
 
       // signal strength
-      snprintf(text, 20, "%ddBm", id(latest_wifi_signal_strength));
-      it.print(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, text);
+      it.printf(5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength));
 
       // litres remaining
-      snprintf(text, 20, "%d litres", id(latest_fuel_volume));
-      it.print(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, text);
+      it.printf(it.get_width() - 5, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_RIGHT, "%d litres", id(latest_fuel_volume));
 
-      // last update
+      // time since last update
       if (time_since_last_update_secs < 60) {
-        snprintf(text, 20, "%d sec", (int)time_since_last_update_secs);
+        it.printf(centre_x, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_CENTER, "%d sec", (int)time_since_last_update_secs);
       } else if (time_since_last_update_secs < 3600) {
-        snprintf(text, 20, "%d min", (int)(time_since_last_update_secs / 60));
+        it.printf(centre_x, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_CENTER, "%d min", (int)(time_since_last_update_secs / 60));
       } else {
-        snprintf(text, 20, "%d hr", (int)(time_since_last_update_secs / 3600));
+        it.printf(centre_x, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_CENTER, "%d hr", (int)(time_since_last_update_secs / 3600));
       }
-      it.print(centre_x, it.get_height(), id(roboto_small), white, TextAlign::BOTTOM_CENTER, text);
