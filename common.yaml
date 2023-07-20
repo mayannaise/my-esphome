@@ -1,9 +1,6 @@
 logger:
   level: DEBUG
 
-api:
-  password: ""
-
 ota:
   password: ""
 
