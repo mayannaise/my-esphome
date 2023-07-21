@@ -19,7 +19,7 @@ globals:
   - id: latest_fuel_level
     type: int
     initial_value: "-1"
-    restore_value: yes
+    restore_value: no
   - id: latest_fuel_volume
     type: int
     restore_value: no
@@ -150,8 +150,8 @@ image:
   - file: mdi:signal-cellular-2
     id: signal_good
     resize: 20x20
-  - file: mdi:signal-off
-    id: signal_lost
+  - file: mdi:signal-cellular-1
+    id: signal_low
     resize: 20x20
   - file: mdi:battery-low
     id: batt_low
@@ -178,12 +178,13 @@ display:
 
       // if not received new data in 5mins, display red screen
       const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update).timestamp);
+      const bool comms_lost = time_since_last_update_secs > 300;
       if (time_since_last_update_secs < 0)
       {
         ESP_LOGW("dashboard", "Re-synching time");
         id(last_update) = id(esptime).now();  
       } 
-      if (time_since_last_update_secs > 300)
+      if (comms_lost)
       {
         it.filled_rectangle(0, 26, width, height - 47, id(red));
         it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
@@ -203,10 +204,8 @@ display:
       // fuel level indicator
       const int dial_radius {(height - 110) / 2};
       const int dial_y {dial_radius + 80};
-      
       it.filled_circle(centre_x, dial_y, dial_radius, id(blue));
       if (id(latest_fuel_level) < 0) {
-        // no data received yet
         it.print(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "---");
       } else {
         it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%d%%", id(latest_fuel_level));
@@ -217,7 +216,15 @@ display:
 
       // signal strength
       it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength));
-      it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
+      if (comms_lost) {
+        it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
+      } else {
+        if (id(latest_wifi_signal_strength) > -95) {
+          it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
+        } else {
+          it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
+        }
+      }
 
       // litres remaining
       it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d litres", id(latest_fuel_volume));
