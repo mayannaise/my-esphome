@@ -75,6 +75,7 @@ mqtt:
             int val = stoi(x);
             ESP_LOGI("dashboard", "Fuel volume is %d litres", val);
             id(latest_fuel_volume) = val;
+            id(last_update) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing fuel volume: %s", x.c_str());
           }
@@ -85,6 +86,7 @@ mqtt:
             int val = stoi(x);
             ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %ddBm", val);
             id(latest_wifi_signal_strength) = val;
+            id(last_update) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
@@ -219,7 +221,7 @@ display:
       if (comms_lost) {
         it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
       } else {
-        if (id(latest_wifi_signal_strength) > -95) {
+        if (id(latest_wifi_signal_strength) > -90) {
           it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
         } else {
           it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
