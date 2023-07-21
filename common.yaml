@@ -1,5 +1,7 @@
 logger:
   level: DEBUG
+  logs:
+    component: ERROR
 
 ota:
   password: ""
