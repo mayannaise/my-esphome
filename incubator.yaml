@@ -1,0 +1,31 @@
+esphome:
+  name: incubator
+
+esp32:
+  board: m5stick-c
+  framework:
+    type: arduino
+
+<<: !include common.yaml
+
+wifi:
+  ssid: !secret wifi_ssid_indoor
+  password: !secret wifi_password
+  ap:
+    password: !secret fallback_ap_password
+
+mqtt:
+  broker: !secret mqtt_broker_host
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal Strength"
+    update_interval: 120s
+    entity_category: "diagnostic"
+  - platform: dht
+    pin: GPIO26
+    update_interval: 120s
+    temperature:
+        name: "Temperature"
+    humidity:
+        name: "Humidity"
