@@ -23,7 +23,7 @@ sensor:
     update_interval: 120s
     entity_category: "diagnostic"
   - platform: dht
-    pin: GPIO26
+    pin: GPIO9
     update_interval: 120s
     temperature:
         name: "Temperature"
