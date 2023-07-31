@@ -23,6 +23,7 @@ sensor:
     update_interval: 120s
     entity_category: "diagnostic"
   - platform: dht
+    model: DHT22
     pin: GPIO9
     update_interval: 120s
     temperature:
