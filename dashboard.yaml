@@ -145,7 +145,7 @@ font:
       family: Roboto
       weight: 900
     id: roboto_large
-    size: 60
+    size: 70
     glyphs: 0123456789+-.°%C
   - file:
       type: gfonts
@@ -244,9 +244,7 @@ display:
           it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Oil Tank");
 
           // fuel level indicator
-          const int dial_radius {(height - 110) / 2};
-          const int dial_y {dial_radius + 80};
-          //it.filled_circle(centre_x, dial_y, dial_radius, id(blue));
+          const int dial_y {((height - 75 - 20) / 2) + 65};
           it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%d%%", id(latest_fuel_level));
 
           // footer separator
@@ -312,8 +310,7 @@ display:
           it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Incubator");
 
           // temperature indicator
-          const int dial_radius {(height - 110) / 2};
-          const int dial_y {dial_radius + 80};
+          const int dial_y {((height - 75 - 20) / 2) + 65};
           it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%0.1f°C", id(latest_incubator_temperature));
 
           // footer separator
