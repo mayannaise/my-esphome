@@ -18,18 +18,27 @@ external_components:
 globals:
   - id: latest_fuel_level
     type: int
-    initial_value: "-1"
     restore_value: no
   - id: latest_fuel_volume
     type: int
     restore_value: no
-  - id: latest_wifi_signal_strength
+  - id: latest_wifi_signal_strength_oiltank
     type: int
     restore_value: no
-  - id: last_update
+  - id: last_update_oiltank
     type: ESPTime
     initial_value: "id(esptime).now()"
-    restore_value: yes
+    restore_value: no
+  - id: latest_incubator_temperature
+    type: float
+    restore_value: no
+  - id: latest_wifi_signal_strength_incubator
+    type: int
+    restore_value: no
+  - id: last_update_incubator
+    type: ESPTime
+    initial_value: "id(esptime).now()"
+    restore_value: no
 
 time:
   platform: sntp
@@ -64,7 +73,7 @@ mqtt:
             int val = stoi(x);
             ESP_LOGI("dashboard", "Fuel level is %d%%", val);
             id(latest_fuel_level) = val;
-            id(last_update) = id(esptime).now();
+            id(last_update_oiltank) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing fuel level: %s", x.c_str());
           }
@@ -75,7 +84,7 @@ mqtt:
             int val = stoi(x);
             ESP_LOGI("dashboard", "Fuel volume is %d litres", val);
             id(latest_fuel_volume) = val;
-            id(last_update) = id(esptime).now();
+            id(last_update_oiltank) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing fuel volume: %s", x.c_str());
           }
@@ -85,8 +94,30 @@ mqtt:
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
             int val = stoi(x);
             ESP_LOGI("dashboard", "Oiltank WiFi signal strength is %ddBm", val);
-            id(latest_wifi_signal_strength) = val;
-            id(last_update) = id(esptime).now();
+            id(latest_wifi_signal_strength_oiltank) = val;
+            id(last_update_oiltank) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
+          }
+    - topic: incubator/sensor/temperature/state
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            float val = stof(x);
+            ESP_LOGI("dashboard", "Incubator temperature is %0.1f'C", val);
+            id(latest_incubator_temperature) = val;
+            id(last_update_incubator) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing incubator temperature: %s", x.c_str());
+          }
+    - topic: incubator/sensor/wifi_signal_strength/state
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            int val = stoi(x);
+            ESP_LOGI("dashboard", "Incubator WiFi signal strength is %ddBm", val);
+            id(latest_wifi_signal_strength_incubator) = val;
+            id(last_update_incubator) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
@@ -115,6 +146,7 @@ font:
       weight: 900
     id: roboto_large
     size: 60
+    glyphs: 0123456789+-.°%C
   - file:
       type: gfonts
       family: Roboto
@@ -162,80 +194,148 @@ image:
     id: batt_good
     resize: 20x20
 
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: core2display
+
 display:
   - platform: ili9xxx
+    id: core2display
     model: M5Stack
     cs_pin: 5
     dc_pin: 15
     rotation: 0
-    lambda: |-
-      // set background colour
-      it.fill(id(black));
+    pages:
+      - id: page_oiltank
+        lambda: |-
+          // set background colour
+          it.fill(id(black));
 
-      // constants
-      const int width {it.get_width()};
-      const int height {it.get_height()};
-      const int centre_x {width / 2};
-      const int footer_y {height - 20};
+          // constants
+          const int width {it.get_width()};
+          const int height {it.get_height()};
+          const int centre_x {width / 2};
+          const int footer_y {height - 20};
 
-      // if not received new data in 5mins, display red screen
-      const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update).timestamp);
-      const bool comms_lost = time_since_last_update_secs > 300;
-      if (time_since_last_update_secs < 0)
-      {
-        ESP_LOGW("dashboard", "Re-synching time");
-        id(last_update) = id(esptime).now();  
-      } 
-      if (comms_lost)
-      {
-        it.filled_rectangle(0, 26, width, height - 47, id(red));
-        it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
-      }
-      else
-      {
-        it.image(width, 1, id(batt_good), ImageAlign::TOP_RIGHT, id(green));
-      }
+          // if not received new data in 5mins, display red screen
+          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_oiltank).timestamp);
+          const bool comms_lost = time_since_last_update_secs > 300;
+          if (time_since_last_update_secs < 0)
+          {
+            ESP_LOGW("dashboard", "Re-synching time");
+            id(last_update_oiltank) = id(esptime).now();  
+          } 
+          if (comms_lost)
+          {
+            it.filled_rectangle(0, 26, width, height - 47, id(red));
+            it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
+          }
+          else
+          {
+            it.image(width, 1, id(batt_good), ImageAlign::TOP_RIGHT, id(green));
+          }
 
-      // current time
-      it.strftime(centre_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
-      
-      // title
-      it.line(0, 25, width, 25, id(white));
-      it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Oil Tank");
+          // current time
+          it.strftime(centre_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
+          
+          // title
+          it.line(0, 25, width, 25, id(white));
+          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Oil Tank");
 
-      // fuel level indicator
-      const int dial_radius {(height - 110) / 2};
-      const int dial_y {dial_radius + 80};
-      it.filled_circle(centre_x, dial_y, dial_radius, id(blue));
-      if (id(latest_fuel_level) < 0) {
-        it.print(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "---");
-      } else {
-        it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%d%%", id(latest_fuel_level));
-      }
+          // fuel level indicator
+          const int dial_radius {(height - 110) / 2};
+          const int dial_y {dial_radius + 80};
+          //it.filled_circle(centre_x, dial_y, dial_radius, id(blue));
+          it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%d%%", id(latest_fuel_level));
 
-      // footer separator
-      it.line(0, footer_y, width, footer_y, id(white));
+          // footer separator
+          it.line(0, footer_y, width, footer_y, id(white));
 
-      // signal strength
-      it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength));
-      if (comms_lost) {
-        it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
-      } else {
-        if (id(latest_wifi_signal_strength) > -90) {
-          it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
-        } else {
-          it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
-        }
-      }
+          // signal strength
+          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength_oiltank));
+          if (comms_lost) {
+            it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
+          } else {
+            if (id(latest_wifi_signal_strength_oiltank) > -90) {
+              it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
+            } else {
+              it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
+            }
+          }
 
-      // litres remaining
-      it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d litres", id(latest_fuel_volume));
+          // litres remaining
+          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d litres", id(latest_fuel_volume));
 
-      // time since last update
-      if (time_since_last_update_secs < 60) {
-        it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f sec", time_since_last_update_secs);
-      } else if (time_since_last_update_secs < 3600) {
-        it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f min", time_since_last_update_secs / 60);
-      } else {
-        it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
-      }
+          // time since last update
+          if (time_since_last_update_secs < 60) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f sec", time_since_last_update_secs);
+          } else if (time_since_last_update_secs < 3600) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f min", time_since_last_update_secs / 60);
+          } else {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
+          }
+      - id: page_incubator
+        lambda: |-
+          // set background colour
+          it.fill(id(black));
+
+          // constants
+          const int width {it.get_width()};
+          const int height {it.get_height()};
+          const int centre_x {width / 2};
+          const int footer_y {height - 20};
+
+          // if not received new data in 5mins, display red screen
+          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_incubator).timestamp);
+          const bool comms_lost = time_since_last_update_secs > 300;
+          if (time_since_last_update_secs < 0)
+          {
+            ESP_LOGW("dashboard", "Re-synching time");
+            id(last_update_incubator) = id(esptime).now();  
+          } 
+          if (comms_lost)
+          {
+            it.filled_rectangle(0, 26, width, height - 47, id(red));
+            it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
+          }
+          else
+          {
+            it.image(width, 1, id(batt_good), ImageAlign::TOP_RIGHT, id(green));
+          }
+
+          // current time
+          it.strftime(centre_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
+
+          // title
+          it.line(0, 25, width, 25, id(white));
+          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Incubator");
+
+          // temperature indicator
+          const int dial_radius {(height - 110) / 2};
+          const int dial_y {dial_radius + 80};
+          it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%0.1f°C", id(latest_incubator_temperature));
+
+          // footer separator
+          it.line(0, footer_y, width, footer_y, id(white));
+
+          // signal strength
+          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength_incubator));
+          if (comms_lost) {
+            it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
+          } else {
+            if (id(latest_wifi_signal_strength_incubator) > -90) {
+              it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
+            } else {
+              it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
+            }
+          }
+
+          // time since last update
+          if (time_since_last_update_secs < 60) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f sec", time_since_last_update_secs);
+          } else if (time_since_last_update_secs < 3600) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f min", time_since_last_update_secs / 60);
+          } else {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
+          }
