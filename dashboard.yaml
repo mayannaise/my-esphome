@@ -32,6 +32,9 @@ globals:
   - id: latest_incubator_temperature
     type: float
     restore_value: no
+  - id: latest_incubator_humidity
+    type: int
+    restore_value: no
   - id: latest_wifi_signal_strength_incubator
     type: int
     restore_value: no
@@ -109,6 +112,17 @@ mqtt:
             id(last_update_incubator) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing incubator temperature: %s", x.c_str());
+          }
+    - topic: incubator/sensor/humidity/state
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            int val = stoi(x);
+            ESP_LOGI("dashboard", "Incubator humidity is %d%%", val);
+            id(latest_incubator_humidity) = val;
+            id(last_update_incubator) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing incubator humidity: %s", x.c_str());
           }
     - topic: incubator/sensor/wifi_signal_strength/state
       then:
@@ -336,3 +350,6 @@ display:
           } else {
             it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
           }
+
+          // humidity
+          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d%%RH", id(latest_incubator_humidity));
