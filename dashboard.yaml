@@ -177,10 +177,6 @@ color:
     red: 0%
     green: 75%
     blue: 0%
-  - id: blue
-    red: 5%
-    green: 0%
-    blue: 90%
   - id: amber
     red: 100%
     green: 40%
