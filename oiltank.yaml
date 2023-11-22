@@ -17,6 +17,11 @@ wifi:
 mqtt:
   broker: !secret mqtt_broker_host
 
+deep_sleep:
+  id: sleep_timer
+  run_duration: 5min   # process sensor readings for 5 minutes
+  sleep_duration: 1h   # then sleep for an hour to save battery power
+
 # oil tanks dimensions
 # - height = 122cm
 # - length = 182.5cm
