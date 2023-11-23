@@ -154,6 +154,7 @@ font:
       weight: 900
     id: roboto
     size: 30
+    glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'"
   - file:
       type: gfonts
       family: Roboto
@@ -318,7 +319,7 @@ display:
 
           // title
           it.line(0, 25, width, 25, id(white));
-          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Incubator");
+          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Monty's Bedroom");
 
           // temperature indicator
           const int dial_y {((height - 75 - 20) / 2) + 65};
