@@ -230,7 +230,7 @@ display:
           const int footer_y {height - 20};
 
           // if not had a recent update, display red screen
-          const auto timeout = (1 * 60 * 60) + 60; // 1hr:1min
+          const auto timeout = (1 * 60 * 60) + (5 * 60); // 1hr:5min
           const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_oiltank).timestamp);
           const bool comms_lost = time_since_last_update_secs > timeout;
           if (time_since_last_update_secs < 0)
