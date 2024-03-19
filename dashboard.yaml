@@ -29,16 +29,22 @@ globals:
     type: ESPTime
     initial_value: "id(esptime).now()"
     restore_value: no
-  - id: latest_incubator_temperature
+  - id: latest_freezer1_temperature
     type: float
     restore_value: no
-  - id: latest_incubator_humidity
+  - id: latest_freezer1_humidity
     type: int
     restore_value: no
-  - id: latest_wifi_signal_strength_incubator
+  - id: latest_freezer2_temperature
+    type: float
+    restore_value: no
+  - id: latest_freezer2_humidity
     type: int
     restore_value: no
-  - id: last_update_incubator
+  - id: latest_wifi_signal_strength_freezer
+    type: int
+    restore_value: no
+  - id: last_update_freezer
     type: ESPTime
     initial_value: "id(esptime).now()"
     restore_value: no
@@ -102,36 +108,58 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
-    - topic: incubator/sensor/temperature/state
+    - topic: incubator/sensor/freezer1temperature/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
             float val = stof(x);
-            ESP_LOGI("dashboard", "Incubator temperature is %0.1f'C", val);
-            id(latest_incubator_temperature) = val;
-            id(last_update_incubator) = id(esptime).now();
+            ESP_LOGI("dashboard", "Freezer 1 temperature is %0.1f'C", val);
+            id(latest_freezer1_temperature) = val;
+            id(last_update_freezer) = id(esptime).now();
           } else {
-            ESP_LOGW("dashboard", "Error processing incubator temperature: %s", x.c_str());
+            ESP_LOGW("dashboard", "Error processing freezer 1 temperature: %s", x.c_str());
           }
-    - topic: incubator/sensor/humidity/state
+    - topic: incubator/sensor/freezer1humidity/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
             int val = stoi(x);
-            ESP_LOGI("dashboard", "Incubator humidity is %d%%", val);
-            id(latest_incubator_humidity) = val;
-            id(last_update_incubator) = id(esptime).now();
+            ESP_LOGI("dashboard", "Freezer 1 humidity is %d%%", val);
+            id(latest_freezer1_humidity) = val;
+            id(last_update_freezer) = id(esptime).now();
           } else {
-            ESP_LOGW("dashboard", "Error processing incubator humidity: %s", x.c_str());
+            ESP_LOGW("dashboard", "Error processing freezer 1 humidity: %s", x.c_str());
+          }
+    - topic: incubator/sensor/freezer2temperature/state
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            float val = stof(x);
+            ESP_LOGI("dashboard", "Freezer 2 temperature is %0.1f'C", val);
+            id(latest_freezer2_temperature) = val;
+            id(last_update_freezer) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing freezer 2 temperature: %s", x.c_str());
+          }
+    - topic: incubator/sensor/freezer2humidity/state
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            int val = stoi(x);
+            ESP_LOGI("dashboard", "Freezer 2 humidity is %d%%", val);
+            id(latest_freezer2_humidity) = val;
+            id(last_update_freezer) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing freezer 2 humidity: %s", x.c_str());
           }
     - topic: incubator/sensor/wifi_signal_strength/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
             int val = stoi(x);
-            ESP_LOGI("dashboard", "Incubator WiFi signal strength is %ddBm", val);
-            id(latest_wifi_signal_strength_incubator) = val;
-            id(last_update_incubator) = id(esptime).now();
+            ESP_LOGI("dashboard", "Freezer WiFi signal strength is %ddBm", val);
+            id(latest_wifi_signal_strength_freezer) = val;
+            id(last_update_freezer) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
@@ -285,7 +313,7 @@ display:
           } else {
             it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
           }
-      - id: page_incubator
+      - id: page_freezer1
         lambda: |-
           // set background colour
           it.fill(id(black));
@@ -297,12 +325,12 @@ display:
           const int footer_y {height - 20};
 
           // if not received new data in 5mins, display red screen
-          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_incubator).timestamp);
+          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_freezer).timestamp);
           const bool comms_lost = time_since_last_update_secs > 300;
           if (time_since_last_update_secs < 0)
           {
             ESP_LOGW("dashboard", "Re-synching time");
-            id(last_update_incubator) = id(esptime).now();  
+            id(last_update_freezer) = id(esptime).now();  
           } 
           if (comms_lost)
           {
@@ -319,21 +347,21 @@ display:
 
           // title
           it.line(0, 25, width, 25, id(white));
-          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Garage");
+          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Left Freezer");
 
           // temperature indicator
           const int dial_y {((height - 75 - 20) / 2) + 65};
-          it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%0.1f°C", id(latest_incubator_temperature));
+          it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%0.1f°C", id(latest_freezer1_temperature));
 
           // footer separator
           it.line(0, footer_y, width, footer_y, id(white));
 
           // signal strength
-          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength_incubator));
+          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength_freezer));
           if (comms_lost) {
             it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
           } else {
-            if (id(latest_wifi_signal_strength_incubator) > -90) {
+            if (id(latest_wifi_signal_strength_freezer) > -90) {
               it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
             } else {
               it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
@@ -350,4 +378,70 @@ display:
           }
 
           // humidity
-          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d%%RH", id(latest_incubator_humidity));
+          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d%%RH", id(latest_freezer1_humidity));
+      - id: page_freezer2
+        lambda: |-
+          // set background colour
+          it.fill(id(black));
+
+          // constants
+          const int width {it.get_width()};
+          const int height {it.get_height()};
+          const int centre_x {width / 2};
+          const int footer_y {height - 20};
+
+          // if not received new data in 5mins, display red screen
+          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_freezer).timestamp);
+          const bool comms_lost = time_since_last_update_secs > 300;
+          if (time_since_last_update_secs < 0)
+          {
+            ESP_LOGW("dashboard", "Re-synching time");
+            id(last_update_freezer) = id(esptime).now();  
+          } 
+          if (comms_lost)
+          {
+            it.filled_rectangle(0, 26, width, height - 47, id(red));
+            it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
+          }
+          else
+          {
+            it.image(width, 1, id(batt_good), ImageAlign::TOP_RIGHT, id(green));
+          }
+
+          // current time
+          it.strftime(centre_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
+
+          // title
+          it.line(0, 25, width, 25, id(white));
+          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Right Freezer");
+
+          // temperature indicator
+          const int dial_y {((height - 75 - 20) / 2) + 65};
+          it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%0.1f°C", id(latest_freezer2_temperature));
+
+          // footer separator
+          it.line(0, footer_y, width, footer_y, id(white));
+
+          // signal strength
+          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%ddBm", id(latest_wifi_signal_strength_freezer));
+          if (comms_lost) {
+            it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(red));
+          } else {
+            if (id(latest_wifi_signal_strength_freezer) > -90) {
+              it.image(1, 1, id(signal_good), ImageAlign::TOP_LEFT, id(green));
+            } else {
+              it.image(1, 1, id(signal_low), ImageAlign::TOP_LEFT, id(amber));
+            }
+          }
+
+          // time since last update
+          if (time_since_last_update_secs < 60) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f sec", time_since_last_update_secs);
+          } else if (time_since_last_update_secs < 3600) {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f min", time_since_last_update_secs / 60);
+          } else {
+            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
+          }
+
+          // humidity
+          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d%%RH", id(latest_freezer2_humidity));

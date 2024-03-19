@@ -27,6 +27,14 @@ sensor:
     pin: GPIO9
     update_interval: 120s
     temperature:
-        name: "Temperature"
+        name: "Freezer1Temperature"
     humidity:
-        name: "Humidity"
+        name: "Freezer1Humidity"
+  - platform: dht
+    model: DHT22
+    pin: GPIO5
+    update_interval: 120s
+    temperature:
+        name: "Freezer2Temperature"
+    humidity:
+        name: "Freezer2Humidity"
