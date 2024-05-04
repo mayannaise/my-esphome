@@ -234,7 +234,7 @@ image:
     resize: 20x20
 
 interval:
-  - interval: 10s
+  - interval: 5s
     then:
       - display.page.show_next: core2display
 
