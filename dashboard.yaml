@@ -159,7 +159,6 @@ mqtt:
             int val = stoi(x);
             ESP_LOGI("dashboard", "Freezer WiFi signal strength is %ddBm", val);
             id(latest_wifi_signal_strength_freezer) = val;
-            id(last_update_freezer) = id(esptime).now();
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }

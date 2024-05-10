@@ -17,24 +17,32 @@ wifi:
 mqtt:
   broker: !secret mqtt_broker_host
 
+i2c:
+  - id: bus_a
+    sda: GPIO21
+    scl: GPIO22
+  - id: bus_b
+    sda: GPIO25
+    scl: GPIO26
+
 sensor:
   - platform: wifi_signal
     name: "WiFi Signal Strength"
     update_interval: 120s
     entity_category: "diagnostic"
-  - platform: dht
-    model: DHT22
-    pin: GPIO9
-    update_interval: 120s
+  - platform: hdc1080
+    i2c_id: bus_a
+    address: 0x40
     temperature:
         name: "Freezer1Temperature"
     humidity:
         name: "Freezer1Humidity"
-  - platform: dht
-    model: DHT22
-    pin: GPIO5
     update_interval: 120s
+  - platform: hdc1080
+    i2c_id: bus_b
+    address: 0x40
     temperature:
         name: "Freezer2Temperature"
     humidity:
         name: "Freezer2Humidity"
+    update_interval: 120s
