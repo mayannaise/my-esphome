@@ -74,6 +74,8 @@ sensor:
 
 mqtt:
   broker: !secret mqtt_broker_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
   on_message:
     - topic: oiltank/sensor/fuel_level/state
       then:

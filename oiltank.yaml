@@ -16,6 +16,8 @@ wifi:
 
 mqtt:
   broker: !secret mqtt_broker_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
 
 deep_sleep:
   id: sleep_timer

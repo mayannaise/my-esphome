@@ -14,6 +14,8 @@ wifi:
 
 mqtt:
   broker: !secret mqtt_broker_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
 
 esp32_camera:
   name: cam1
