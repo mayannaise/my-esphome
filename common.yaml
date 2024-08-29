@@ -4,6 +4,7 @@ logger:
     component: ERROR
 
 ota:
-  password: ""
+  - platform: esphome
+    password: ""
 
 captive_portal:
