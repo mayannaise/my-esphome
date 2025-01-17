@@ -625,7 +625,7 @@ display:
           it.line(0, footer_y, width, footer_y, id(white));
 
           // temperature
-          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%0.0f°C", id(atmotube_temp));
+          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%0.0f°C", id(atmotube_temp).state);
 
           // time since last update
           if (time_since_last_update_secs < 60) {
