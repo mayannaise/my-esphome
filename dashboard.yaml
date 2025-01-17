@@ -64,7 +64,6 @@ sun:
 
 http_request:
   verify_ssl: false
-  useragent: "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"
 
 sensor:
   - platform: axp192
@@ -280,7 +279,7 @@ interval:
   - interval: 5s
     then:
       - display.page.show_next: core2display
-  - interval: 20s
+  - interval: 2min
     then:
       - if:
           condition:
