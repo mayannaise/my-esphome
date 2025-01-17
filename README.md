@@ -5,7 +5,7 @@
 Install esphome on your dev machine:
 
 ```sh
-
+pip install esphome
 ```
 
 ## Install OpenHAB
