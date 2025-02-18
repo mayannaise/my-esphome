@@ -48,10 +48,6 @@ globals:
     type: ESPTime
     initial_value: "id(esptime).now()"
     restore_value: no
-  - id: last_update_atmotube
-    type: ESPTime
-    initial_value: "id(esptime).now()"
-    restore_value: no
 
 time:
   platform: sntp
@@ -61,9 +57,6 @@ sun:
   latitude: !secret home_lat
   longitude: !secret home_lon
   id: the_sun
-
-http_request:
-  verify_ssl: false
 
 sensor:
   - platform: axp192
@@ -88,15 +81,6 @@ sensor:
     update_interval: 60s
     lambda: |-
       return id(latest_freezer2_temperature);
-  - platform: template
-    id: atmotube
-    update_interval: never
-  - platform: template
-    id: atmotube_temp
-    update_interval: never
-  - platform: template
-    id: atmotube_humid
-    update_interval: never
 
 mqtt:
   broker: !secret mqtt_broker_host
@@ -279,60 +263,6 @@ interval:
   - interval: 5s
     then:
       - display.page.show_next: core2display
-  - interval: 2min
-    then:
-      - if:
-          condition:
-            wifi.connected:
-          then:
-            - http_request.send:
-                method: GET
-                headers:
-                  Content-Type: text/html
-                url: !secret atmotube_api_url
-                capture_response: true
-                on_response:
-                  then:
-                    - lambda: |-
-                        json::parse_json(body, [](JsonObject root) -> bool {
-                            if (root["data"]["items"][0]) {
-                                // get time
-                                const std::string strtime = root["data"]["items"][0]["time"];
-                                ESPTime t;
-                                sscanf(
-                                  strtime.c_str(),
-                                  "%04hu-%02hhu-%02hhuT%02hhu:%02hhu:%02hhu",
-                                  &t.year, &t.month, &t.day_of_month,
-                                  &t.hour, &t.minute, &t.second);
-                                t.day_of_week = 1; // isn't used, but needs to be valid
-                                t.day_of_year = 1; // isn't used, but needs to be valid
-                                t.recalc_timestamp_utc(false);
-                                id(last_update_atmotube) = t;
-
-                                // get VOC
-                                const float voc = root["data"]["items"][0]["voc"];
-                                if (voc < 0.5) {
-                                    id(atmotube).publish_state(100 - 60 * voc);
-                                } else if (voc < 2) {
-                                    id(atmotube).publish_state((118 - 26 * voc) / 1.5f);
-                                } else {
-                                    const auto aqs = (374 - 44 * voc) / 6.5f;
-                                    id(atmotube).publish_state(aqs < 0 ? 0 : aqs);
-                                }
-
-                                // get temp/humid
-                                const int temp = root["data"]["items"][0]["t"];
-                                const int humid = root["data"]["items"][0]["h"];
-                                id(atmotube_temp).publish_state(temp);
-                                id(atmotube_humid).publish_state(humid);
-
-                                ESP_LOGI("dashboard", "Atmotube VOC=%0.3fppm, Temp=%0.0f'C, Humid=%0.0f%%", voc, temp, humid);
-                                return true;
-                            } else {
-                                ESP_LOGE("dashboard", "Invalid response from Atmotube");
-                                return false;
-                            }
-                        });
 
 graph:
   - id: left_freezer_graph
@@ -573,67 +503,3 @@ display:
           // humidity
           it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "%d%%RH", id(latest_freezer2_humidity));
 
-      - id: page_atmotube
-        lambda: |-
-          // set background colour
-          it.fill(id(black));
-
-          // constants
-          const int width {it.get_width()};
-          const int height {it.get_height()};
-          const int centre_x {width / 2};
-          const int footer_y {height - 20};
-
-          // check comms
-          const double time_since_last_update_secs = difftime(id(esptime).now().timestamp, id(last_update_atmotube).timestamp);
-          const auto t1 = id(esptime).now();
-          const auto t2 = id(last_update_atmotube);
-          const bool comms_lost = false;
-          if (comms_lost)
-          {
-            it.filled_rectangle(0, 26, width, height - 47, id(red));
-            it.image(width, 1, id(batt_low), ImageAlign::TOP_RIGHT, id(red));
-          }
-          else
-          {
-            it.image(width, 1, id(batt_good), ImageAlign::TOP_RIGHT, id(green));
-          }
-
-          // current time
-          it.strftime(centre_x, 0, id(roboto_small), TextAlign::TOP_CENTER, "%H:%M", id(esptime).now());
-
-          // title
-          it.line(0, 25, width, 25, id(white));
-          it.print(centre_x, 50, id(roboto), id(green), TextAlign::CENTER, "Air Quality");
-
-          // AQS indicator
-          const int dial_y {((height - 75 - 20) / 2) + 65};
-          if (id(atmotube).state >= 81) {
-            it.image(centre_x, dial_y, id(leaf), ImageAlign::CENTER, id(blue));
-          } else if (id(atmotube).state >= 61) {
-            it.image(centre_x, dial_y, id(leaf), ImageAlign::CENTER, id(green));
-          } else if (id(atmotube).state >= 41) {
-            it.image(centre_x, dial_y, id(leaf), ImageAlign::CENTER, id(yellow));
-          } else if (id(atmotube).state >= 21) {
-            it.image(centre_x, dial_y, id(leaf), ImageAlign::CENTER, id(amber));
-          } else {
-            it.image(centre_x, dial_y, id(leaf), ImageAlign::CENTER, id(red));
-          }
-
-          // footer separator
-          it.line(0, footer_y, width, footer_y, id(white));
-
-          // temperature
-          it.printf(5, height, id(roboto_small), id(white), TextAlign::BOTTOM_LEFT, "%0.0f°C", id(atmotube_temp).state);
-
-          // time since last update
-          if (time_since_last_update_secs < 60) {
-            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f sec", time_since_last_update_secs);
-          } else if (time_since_last_update_secs < 3600) {
-            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.0f min", time_since_last_update_secs / 60);
-          } else {
-            it.printf(centre_x, height, id(roboto_small), id(white), TextAlign::BOTTOM_CENTER, "%.1f hr", time_since_last_update_secs / 3600);
-          }
-
-          // VOC
-          it.printf(width - 5, height, id(roboto_small), id(white), TextAlign::BOTTOM_RIGHT, "AQS=%.0f%%", id(atmotube).state);
