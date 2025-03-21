@@ -1,6 +1,7 @@
 esphome:
   name: dashboard
-  platform: ESP32
+
+esp32:
   board: m5stack-core-esp32
 
 <<: !include common.yaml
@@ -246,18 +247,23 @@ image:
   - file: mdi:signal-cellular-2
     id: signal_good
     resize: 20x20
+    type: binary
   - file: mdi:signal-cellular-1
     id: signal_low
     resize: 20x20
+    type: binary
   - file: mdi:battery-low
     id: batt_low
     resize: 20x20
+    type: binary
   - file: mdi:battery-medium
     id: batt_good
     resize: 20x20
+    type: binary
   - file: mdi:leaf
     id: leaf
     resize: 90x90
+    type: binary
 
 interval:
   - interval: 5s
@@ -292,6 +298,7 @@ display:
   - platform: ili9xxx
     id: core2display
     model: M5Stack
+    color_palette: 8BIT
     cs_pin: 5
     dc_pin: 15
     rotation: 0
