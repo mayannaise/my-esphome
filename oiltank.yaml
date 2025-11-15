@@ -21,7 +21,7 @@ mqtt:
 
 deep_sleep:
   id: sleep_timer
-  run_duration: 5min   # process sensor readings for 5 minutes
+  run_duration: 10min   # process sensor readings for 10 minutes
   sleep_duration: 1h   # then sleep for an hour to save battery power
 
 # oil tanks dimensions
@@ -48,21 +48,22 @@ sensor:
     trigger_pin: GPIO10
     echo_pin: GPIO14
     timeout: 4m
-    update_interval: 15s
+    pulse_time: 20us
+    update_interval: 10s
     filters:
-      - min:
-          window_size: 8
-          send_every: 4
+      - max:
+          window_size: 20
+          send_every: 3
   - platform: template
     name: Fuel Level
     # convert from metres to percent level (1.15m = empty, 0m = full)
     lambda: return round((1.15 - id(level_sensor).state) / 1.15 * 100);
     unit_of_measurement: "%"
     accuracy_decimals: 0
-    update_interval: 120s
+    update_interval: 30s
   - platform: template
     name: Fuel Volume
     unit_of_measurement: "litres"
     accuracy_decimals: 0
-    update_interval: 120s
+    update_interval: 30s
     lambda: return (1.15 - id(level_sensor).state) * 1113.25;
