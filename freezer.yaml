@@ -1,5 +1,5 @@
 esphome:
-  name: incubator
+  name: freezer
 
 esp32:
   board: m5stick-c

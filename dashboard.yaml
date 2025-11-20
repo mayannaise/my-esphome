@@ -126,7 +126,7 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
           }
-    - topic: incubator/sensor/freezer1temperature/state
+    - topic: freezer/sensor/freezer1temperature/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
@@ -137,7 +137,7 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing freezer 1 temperature: %s", x.c_str());
           }
-    - topic: incubator/sensor/freezer1humidity/state
+    - topic: freezer/sensor/freezer1humidity/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
@@ -148,7 +148,7 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing freezer 1 humidity: %s", x.c_str());
           }
-    - topic: incubator/sensor/freezer2temperature/state
+    - topic: freezer/sensor/freezer2temperature/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
@@ -159,7 +159,7 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing freezer 2 temperature: %s", x.c_str());
           }
-    - topic: incubator/sensor/freezer2humidity/state
+    - topic: freezer/sensor/freezer2humidity/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
@@ -170,7 +170,7 @@ mqtt:
           } else {
             ESP_LOGW("dashboard", "Error processing freezer 2 humidity: %s", x.c_str());
           }
-    - topic: incubator/sensor/wifi_signal_strength/state
+    - topic: freezer/sensor/wifi_signal_strength/state
       then:
         lambda: |-
           if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
