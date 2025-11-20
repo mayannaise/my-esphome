@@ -3,6 +3,8 @@ esphome:
 
 esp32:
   board: m5stack-core-esp32
+  framework:
+    type: arduino
 
 <<: !include common.yaml
 
@@ -24,6 +26,9 @@ globals:
     type: int
     restore_value: no
   - id: latest_wifi_signal_strength_oiltank
+    type: int
+    restore_value: no
+  - id: latest_days_remaining
     type: int
     restore_value: no
   - id: last_update_oiltank
@@ -174,6 +179,17 @@ mqtt:
             id(latest_wifi_signal_strength_freezer) = val;
           } else {
             ESP_LOGW("dashboard", "Error processing signal strength: %s", x.c_str());
+          }
+    - topic: oiltank/days_of_fuel_remaining
+      then:
+        lambda: |-
+          if (x.find_first_not_of("-+.0123456789") == std::string::npos) {
+            int val = stoi(x);
+            ESP_LOGI("dashboard", "Days of fuel left %d", val);
+            id(latest_days_remaining) = val;
+            id(last_update_oiltank) = id(esptime).now();
+          } else {
+            ESP_LOGW("dashboard", "Error processing days remaining: %s", x.c_str());
           }
 
 spi:
@@ -344,6 +360,9 @@ display:
           // fuel level indicator
           const int dial_y {((height - 75 - 20) / 2) + 65};
           it.printf(centre_x, dial_y, id(roboto_large), id(amber), TextAlign::CENTER, "%d%%", id(latest_fuel_level));
+
+          // days of fuel remaining
+          it.printf(centre_x, dial_y + ((footer_y - dial_y) / 2), id(roboto_small), id(white), TextAlign::CENTER, "%d days left", id(latest_days_remaining));
 
           // footer separator
           it.line(0, footer_y, width, footer_y, id(white));
