@@ -48,12 +48,13 @@ sensor:
     trigger_pin: GPIO10
     echo_pin: GPIO14
     timeout: 4m
-    pulse_time: 20us
+    pulse_time: 30us
     update_interval: 10s
     filters:
       - max:
           window_size: 20
-          send_every: 3
+          send_every: 10
+          send_first_at: 10
   - platform: template
     name: Fuel Level
     # convert from metres to percent level (1.15m = empty, 0m = full)
